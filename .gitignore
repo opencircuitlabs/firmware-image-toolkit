@@ -1,0 +1,5 @@
+node_modules/
+coverage/
+*.bin
+*.s37
+converted.hex

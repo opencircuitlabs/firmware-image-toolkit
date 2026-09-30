@@ -1,0 +1,6 @@
+#!/usr/bin/env node
+import { readFileSync, writeFileSync } from 'node:fs';
+import { analyzeImage, parseImage, toIntelHex, toRaw, toSRecord } from './index.js';
+
+const args=process.argv.slice(2);const value=(flag)=>{const i=args.indexOf(flag);return i<0?undefined:args[i+1];};
+try{const command=args[0];const input=args[1];if(!command||!input)throw new Error('Usage: firmware-image <info|convert> input --from auto --to ihex|srec|raw --output file');const from=value('--from')??'auto';const source=from==='raw'||(from==='auto'&&!/\.(?:hex|ihex|srec|s19|s28|s37)$/i.test(input))?readFileSync(input):readFileSync(input,'utf8');const image=parseImage(source,from,{address:Number(value('--address')??0)});if(command==='info')console.log(JSON.stringify(analyzeImage(image),null,2));else if(command==='convert'){const to=value('--to');const output=value('--output');if(!to||!output)throw new Error('--to and --output are required');if(to==='ihex')writeFileSync(output,toIntelHex(image));else if(to==='srec')writeFileSync(output,toSRecord(image));else if(to==='raw')writeFileSync(output,toRaw(image));else throw new Error(`Unsupported output format: ${to}`);}else throw new Error(`Unknown command: ${command}`);}catch(error){console.error(error.message);process.exitCode=1;}
